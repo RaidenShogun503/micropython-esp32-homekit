@@ -15,7 +15,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       
-    - name: Set up Python 3.8  # Thay đổi từ 3.9.23
+    - name: Set up Python 3.8
       uses: actions/setup-python@v4
       with:
         python-version: 3.8
@@ -27,6 +27,7 @@ jobs:
         
     - name: Build micropython-homekit
       run: |
+        export CFLAGS_EXTRA="-Wno-dangling-pointer"
         make
         
     - name: Upload build artifacts
