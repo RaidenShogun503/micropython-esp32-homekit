@@ -9,8 +9,8 @@ ESPIDF_DIR=$(ROOT)/esp-idf
 ESPHK_DIR=$(ROOT)/esp-homekit-sdk
 PATCH_DIR=$(PWD)/patch
 
-MPY_VERSION=v1.26.0
-ESPIDF_VERSION=v5.5.1
+MPY_VERSION=v1.15
+ESPIDF_VERSION=v4.2.1
 ESPHK_VERSION=389189abd7c1965d70eb3ddc7a19a8f0313f1fc8
 
 ifneq ($(LOCAL_GIT_DIR),)
@@ -104,10 +104,11 @@ ifeq ($(wildcard .stamp_patched),)
 endif
 
 build-micropython:
-	make -C $(MPY_DIR)/mpy-cross
+	make -C $(MPY_DIR)/mpy-cross CFLAGS_EXTRA="-Wno-dangling-pointer"
 	source $(ESPIDF_DIR)/export.sh; \
 	make -C $(MPY_DIR)/ports/esp32 submodules; \
-	make USER_C_MODULES=$(MPY_MOD_DIR)/micropython.cmake -C $(MPY_DIR)/ports/esp32 BOARD=$(BOARD)
+	make USER_C_MODULES=$(MPY_MOD_DIR)/micropython.cmake -C $(MPY_DIR)/ports/esp32 BOARD=$(BOARD) CFLAGS_EXTRA="-Wno-dangling-pointer"
+
 
 retrieve-firmware:
 	cp $(MPY_DIR)/ports/esp32/build-$(BOARD)/firmware.bin \
