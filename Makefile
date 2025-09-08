@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 ROOT=$(PWD)/components
 
-BOARD=GENERIC
+BOARD=ESP32_GENERIC
 
 MPY_DIR=$(ROOT)/micropython
 MPY_MOD_DIR=$(PWD)/modules/
@@ -9,9 +9,9 @@ ESPIDF_DIR=$(ROOT)/esp-idf
 ESPHK_DIR=$(ROOT)/esp-homekit-sdk
 PATCH_DIR=$(PWD)/patch
 
-MPY_VERSION=v1.15
-ESPIDF_VERSION=v4.2.1
-ESPHK_VERSION=389189abd7c1965d70eb3ddc7a19a8f0313f1fc8
+MPY_VERSION=v1.26.0
+ESPIDF_VERSION=v5.5.1
+ESPHK_VERSION=bfbcd6e749635d97645380b9d7b32274553fe017
 
 ifneq ($(LOCAL_GIT_DIR),)
 MPY_URL=file://$(LOCAL_GIT_DIR)/micropython
@@ -45,42 +45,24 @@ endif
 
 get-esp_idf:
 ifeq ($(wildcard .stamp_espidf_dl),)
-	git -C $(ROOT) clone $(ESPIDF_URL)
+	[ -d $(ESPIDF_DIR) ] || git -C $(ROOT) clone $(ESPIDF_URL)
 	git -C $(ESPIDF_DIR) checkout $(ESPIDF_VERSION)
 ifneq ($(LOCAL_GIT_DIR),)
 	scripts/localtool espidf-submodules $(LOCAL_GIT_DIR)
 endif
-	git -C $(ESPIDF_DIR) submodule update --init \
-    	components/bt/controller/lib \
-    	components/bt/host/nimble/nimble \
-    	components/esp_wifi \
-    	components/esptool_py/esptool \
-    	components/lwip/lwip \
-    	components/mbedtls/mbedtls \
-		components/asio \
-		components/cbor \
-		components/coap \
-		components/nghttp \
-		components/expat \
-		components/mqtt \
-		components/spiffs \
-		components/unity \
-		components/protobuf-c \
-		components/json \
-		components/bootloader
-	cd $(ESPIDF_DIR) && ./install.sh
+	git -C $(ESPIDF_DIR) submodule update --init --recursive
+	cd $(ESPIDF_DIR) && ./install.sh || true
 	touch .stamp_espidf_dl
 endif
 
 get-esp_homekit_sdk:
 ifeq ($(wildcard .stamp_esphk_dl),)
-	git -C $(ROOT) clone $(ESPHK_URL)
+	[ -d $(ESPHK_DIR) ] || git -C $(ROOT) clone $(ESPHK_URL)
 	git -C $(ESPHK_DIR) checkout $(ESPHK_VERSION)
 ifneq ($(LOCAL_GIT_DIR),)
 	scripts/localtool esphk-submodules $(LOCAL_GIT_DIR)
 endif
-	git -C $(ESPHK_DIR) submodule update --init --recursive -- components/homekit/json_parser/
-	git -C $(ESPHK_DIR) submodule update --init -- components/homekit/json_generator
+	git -C $(ESPHK_DIR) submodule update --init --recursive
 	$(call sl_hk,esp_hap_apple_profiles)
 	$(call sl_hk,esp_hap_core)
 	$(call sl_hk,esp_hap_extras)
@@ -106,7 +88,7 @@ endif
 build-micropython:
 	make -C $(MPY_DIR)/mpy-cross CFLAGS_EXTRA="-Wno-dangling-pointer"
 	source $(ESPIDF_DIR)/export.sh; \
-	make -C $(MPY_DIR)/ports/esp32 submodules; \
+	make -C $(MPY_DIR)/ports/esp32 submodules || true; \
 	make USER_C_MODULES=$(MPY_MOD_DIR)/micropython.cmake -C $(MPY_DIR)/ports/esp32 BOARD=$(BOARD) CFLAGS_EXTRA="-Wno-dangling-pointer"
 
 
