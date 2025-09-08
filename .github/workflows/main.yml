@@ -1,5 +1,4 @@
 name: Build micropython-homekit ESP32
-
 on:
   push:
     branches:
@@ -12,22 +11,24 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-
-    - name: Set up Python 3.9.23
+      
+    - name: Set up Python 3.8  # Thay đổi từ 3.9.23
       uses: actions/setup-python@v4
       with:
-        python-version: 3.9.23
-
-
-
+        python-version: 3.8
+        
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git wget flex bison gperf python3-pip python3-setuptools cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+        
     - name: Build micropython-homekit
       run: |
         make
-
+        
     - name: Upload build artifacts
       if: success()
       uses: actions/upload-artifact@v4
